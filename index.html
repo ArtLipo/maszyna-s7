@@ -45,6 +45,11 @@ header{padding:44px 0 0}
 .krok input.zero{color:var(--ghost)}
 .zakres{font-size:11.5px;color:var(--ghost);white-space:nowrap}
 .panelnota{font-size:11.5px;color:var(--ghost);margin-top:14px;line-height:1.7;max-width:62ch}
+.wlasne{margin-top:16px;padding-top:14px;border-top:1px dotted var(--rule)}
+.wlasne label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:13px}
+.wlasne input{margin:3px 0 0;accent-color:var(--mark);width:15px;height:15px;flex:none;cursor:pointer}
+.wlasne .opis{font-size:11.5px;color:var(--ghost);line-height:1.7;max-width:60ch;margin-top:5px}
+.wlasne .stan{color:var(--mark);font-size:11.5px}
 
 .seclabel{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ghost);margin:34px 0 10px}
 textarea{width:100%;min-height:130px;resize:vertical;font-family:var(--serif);font-size:18px;
@@ -139,6 +144,18 @@ footer b{color:var(--ink);font-weight:500}
       <input type="number" id="k_d" value="7" step="1">
       <span class="zakres" id="z_d"></span>
     </div>
+    <div class="wlasne">
+      <label><input type="checkbox" id="nw">
+        <span>wpuść nazwy własne do zabawy</span></label>
+      <div class="opis">
+        Zwykle nazwy własne zostają nietknięte i nie służą też za materiał do
+        podmieniania — słowniki ich nie notują. Po włączeniu wchodzą na listę
+        rzeczowników na równi z resztą: „Warszawa” może przejść w „Warszewice”,
+        a zwykły rzeczownik wylądować na nazwie miejscowej.
+        <span class="stan" id="nw_stan"></span>
+      </div>
+    </div>
+
     <div class="panelnota">
       Zero znaczy „nie ruszaj”. Wartości ujemne liczą wstecz. Lista haseł jest
       zapętlona: za ostatnim wyrazem następuje pierwszy. Przysłówki obejmują tylko
@@ -187,6 +204,7 @@ const D = {
   v:{lem:[],ent:[],pref:null,irr:[],frq:""},
   a:{lem:[],ent:[],pref:null,irr:[],frq:""},
   d:{lem:[],ent:[],pref:null,irr:[],frq:""},   // przysłówki stopniowalne
+  n1:null, n2:null,   // rzeczowniki bez nazw własnych / z nazwami
   tag:[], func:null, nazwy:null
 };
 
@@ -273,16 +291,7 @@ async function wczytaj(){
 
     postep(0.95, "budowanie indeksu…");
     await new Promise(r=>setTimeout(r,0));
-    for(const p of ["n","v","a","d"]){
-      const m = new Map(), lem = D[p].lem;
-      for(let i=0;i<lem.length;i++){
-        const k = lem[i].slice(0,3);
-        let a = m.get(k);
-        if(a === undefined){ a = []; m.set(k,a); }
-        a.push(i);
-      }
-      D[p].pref = m;
-    }
+    for(const p of ["n","v","a","d"]) zbudujIndeks(D[p]);
 
     // zakresy skoków wynikają z długości list haseł
     const f = n => n.toLocaleString("pl-PL");
@@ -293,6 +302,7 @@ async function wczytaj(){
       document.getElementById("z_"+p).textContent = "zakres ±" + f(maks);
     }
 
+    D.n1 = D.n;          // zapamiętujemy wersję bez nazw własnych
     postep(1, "gotowe");
     document.getElementById("loader").hidden = true;
     document.getElementById("app").hidden = false;
@@ -306,6 +316,55 @@ async function wczytaj(){
       ? "Ta przeglądarka nie rozpakowuje gzipa w JavaScripcie. Potrzebny Firefox 113+, Chrome 80+ albo Safari 16.4+."
       : "Nie udało się wczytać słownika: " + e.message + ". Sprawdź, czy katalog „dane” leży obok pliku index.html.";
   }
+}
+
+function zbudujIndeks(zbior){
+  const m = new Map(), lem = zbior.lem;
+  for(let i=0;i<lem.length;i++){
+    const k = lem[i].slice(0,3);
+    let a = m.get(k);
+    if(a === undefined){ a = []; m.set(k,a); }
+    a.push(i);
+  }
+  zbior.pref = m;
+  return zbior;
+}
+
+/* ------------------------------------------------------------------
+   Przełącznik nazw własnych. Wyłączony: nazwy są chronione i nie ma ich
+   na liście haseł. Włączony: doczytujemy pełną listę rzeczowników,
+   w której nazwy własne stoją na równi z wyrazami pospolitymi.
+   ------------------------------------------------------------------ */
+async function przelaczNazwy(wlacz){
+  const stan = document.getElementById("nw_stan");
+  if(wlacz && !D.n2){
+    stan.textContent = " wczytywanie…";
+    try{
+      const linie = (await pobierzGz("dane/n2.txt.gz")).split("\n");
+      const lem = new Array(linie.length), ent = new Array(linie.length);
+      for(let i=0;i<linie.length;i++){
+        const t = linie[i].indexOf("\t");
+        lem[i] = linie[i].slice(0,t); ent[i] = linie[i].slice(t+1);
+      }
+      const ir = await pobierzGz("dane/n2.irr.gz");
+      D.n2 = zbudujIndeks({lem, ent, pref:null,
+        irr: ir ? ir.split(",").map(Number) : [],
+        frq: await pobierzGz("dane/n2.frq.gz")});
+    }catch(e){
+      stan.textContent = " nie udało się wczytać: " + e.message;
+      document.getElementById("nw").checked = false;
+      return;
+    }
+  }
+  D.n = wlacz ? D.n2 : D.n1;
+  cacheAnalizy.clear();                       // analizy zależą od listy haseł
+  const maks = D.n.lem.length - 1;
+  const inp = document.getElementById("k_n");
+  inp.min = -maks; inp.max = maks;
+  document.getElementById("z_n").textContent = "zakres ±" + maks.toLocaleString("pl-PL");
+  stan.textContent = wlacz
+    ? ` włączone — lista rzeczowników urosła do ${D.n.lem.length.toLocaleString("pl-PL")} haseł`
+    : "";
 }
 
 /* ---------- analiza ---------- */
@@ -484,7 +543,7 @@ function esc(s){
 }
 const mod = (a,n) => ((a % n) + n) % n;
 
-function przeksztalc(tekst, kroki){
+function przeksztalc(tekst, kroki, nazwyGraja){
   const html = [], rejestr = [];
   const re = /[\p{L}]+/gu;
   let ost = 0, m, przyimek = null;
@@ -506,11 +565,15 @@ function przeksztalc(tekst, kroki){
     // Nazwy własne. Usunęliśmy je z list haseł, bo słowniki ich nie notują —
     // ale to znaczy, że maszyna widziałaby np. „Polska” wyłącznie jako formę
     // przymiotnika „polski”. Dlatego sprawdzamy je osobno i zostawiamy w spokoju.
-    if(slowo[0] !== slowo[0].toLowerCase() && D.nazwy.has(slowo)){
+    if(!nazwyGraja && slowo[0] !== slowo[0].toLowerCase() && D.nazwy.has(slowo)){
       html.push(esc(slowo)); przyimek = null; continue;
     }
 
-    const an = analizuj(mala);
+    // Hasła nazw własnych zapisane są wielką literą, więc przy włączonym
+    // przełączniku szukamy najpierw w oryginalnej pisowni.
+    let an = null;
+    if(nazwyGraja && slowo[0] !== slowo[0].toLowerCase()) an = analizuj(slowo);
+    if(!an) an = analizuj(mala);
     if(!an){ html.push(esc(slowo)); przyimek = null; continue; }
 
     // zaimki przymiotne — klasa zamknięta, metoda ich nie rusza
@@ -598,7 +661,7 @@ function uruchom(){
   const kroki = {n:odczytajKrok("n"), v:odczytajKrok("v"),
                  a:odczytajKrok("a"), d:odczytajKrok("d")};
   const t0 = performance.now();
-  const {html, rejestr} = przeksztalc(tekst, kroki);
+  const {html, rejestr} = przeksztalc(tekst, kroki, document.getElementById("nw").checked);
   const ms = Math.round(performance.now()-t0);
   document.getElementById("wynik").innerHTML = html;
   document.getElementById("copyrow").hidden = false;
@@ -608,6 +671,7 @@ function uruchom(){
     `zamieniono ${n} ${n===1?"słowo":(n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"słowa":"słów")} · ${ms} ms`;
 }
 
+document.getElementById("nw").addEventListener("change", e => przelaczNazwy(e.target.checked));
 document.getElementById("przycisk").addEventListener("click", uruchom);
 document.getElementById("wejscie").addEventListener("keydown", e=>{
   if((e.ctrlKey||e.metaKey) && e.key==="Enter") uruchom();

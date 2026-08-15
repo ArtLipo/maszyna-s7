@@ -62,6 +62,28 @@ nazwy miejscowe się nie stopniują.
 Cena tego wyboru: przysłówki niestopniowalne, jak *dzisiaj* czy *wczoraj*, zostają
 nietknięte.
 
+## Odsłowniki
+
+Odsłowniki (*gaszenie*, *dolewanie*, *narzekanie*) to rzeczowniki utworzone od
+czasowników. Morfologik lematyzuje je do bezokolicznika, więc traktuje jak formy
+czasownika — a odmieniają się i zachowują jak rzeczowniki nijakie.
+
+Maszyna wprowadza je jako **hasła rzeczownikowe**: lematem jest ich własny mianownik,
+a znaczniki przepisane są z `ger:…` na `subst:…`. Bez tego 27 377 odsłowników nie
+istniałoby dla maszyny w ogóle — tylko 2136 z nich ma w Morfologiku osobne hasło
+rzeczownikowe.
+
+## Nazwy własne — przełącznik
+
+Domyślnie nazwy własne są wyłączone z gry w obie strony. Można to odwrócić jednym
+polem wyboru: wtedy lista rzeczowników rośnie ze 171 388 do 204 772 haseł, a nazwy
+stoją na niej na równi z wyrazami pospolitymi. *Warszawa* przechodzi w *Warszawiankę*,
+*Chrystusa* w *Chryzarobinę*, a zwykły rzeczownik może wylądować na nazwie miejscowej.
+
+Pełna lista doczytuje się dopiero przy pierwszym włączeniu, żeby nie obciążać
+startu. Uwaga: przy włączonym przełączniku **wszystkie skoki wypadają gdzie indziej**,
+bo zmienia się długość listy — te same ustawienia dadzą inne wyniki niż przy wyłączonym.
+
 ## Przypadek gramatyczny
 
 Jedna polska forma pasuje często do wielu przypadków naraz. „Normalności" to
