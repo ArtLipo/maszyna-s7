@@ -134,9 +134,15 @@ footer b{color:var(--ink);font-weight:500}
       <input type="number" id="k_a" value="7" step="1">
       <span class="zakres" id="z_a"></span>
     </div>
+    <div class="krok">
+      <label for="k_d">przysłówki</label>
+      <input type="number" id="k_d" value="7" step="1">
+      <span class="zakres" id="z_d"></span>
+    </div>
     <div class="panelnota">
       Zero znaczy „nie ruszaj”. Wartości ujemne liczą wstecz. Lista haseł jest
-      zapętlona: za ostatnim wyrazem następuje pierwszy.
+      zapętlona: za ostatnim wyrazem następuje pierwszy. Przysłówki obejmują tylko
+      te stopniowalne — reszta listy to w połowie formy od nazw miejscowych.
     </div>
   </div>
 
@@ -161,7 +167,8 @@ footer b{color:var(--ink);font-weight:500}
   Dane słownikowe: <b>PoliMorfologik 2.1</b> (Marcin Miłkowski i in., IPI PAN / sjp.pl), licencja BSD —
   <a href="https://github.com/morfologik/polimorfologik">github.com/morfologik/polimorfologik</a>.
   Oceny częstości: <b>FrequencyWords</b> (OpenSubtitles 2018).
-  Nazwy własne pominięto, tak jak pomijają je słowniki języka polskiego.
+  Nazwy własne pominięto na listach haseł, tak jak pomijają je słowniki języka polskiego,
+  i jednocześnie chronione są przed zamianą.
   Zaimki i słowa funkcyjne zostają nietknięte.
   <span id="stat"></span>
 </footer>
@@ -172,14 +179,15 @@ footer b{color:var(--ink);font-weight:500}
 "use strict";
 
 const B36 = "0123456789abcdefghijklmnopqrstuvwxyz";
-const POS_NAZWA = {n:"rzecz.", v:"czas.", a:"przym."};
+const POS_NAZWA = {n:"rzecz.", v:"czas.", a:"przym.", d:"przysł."};
 const PROG_FUNKCYJNY = 10;
 
 const D = {
   n:{lem:[],ent:[],pref:null,irr:[],frq:""},
   v:{lem:[],ent:[],pref:null,irr:[],frq:""},
   a:{lem:[],ent:[],pref:null,irr:[],frq:""},
-  tag:[], func:null
+  d:{lem:[],ent:[],pref:null,irr:[],frq:""},   // przysłówki stopniowalne
+  tag:[], func:null, nazwy:null
 };
 
 /* ------------------------------------------------------------------
@@ -233,7 +241,7 @@ function postep(f, txt){
 
 async function wczytaj(){
   try{
-    const N = 10; let done = 0;
+    const N = 13; let done = 0;
     const krok = async (opis, fn) => { postep(done/N, "wczytywanie: "+opis+"…"); await fn(); done++; };
 
     await krok("znaczniki gramatyczne", async () => {
@@ -242,7 +250,10 @@ async function wczytaj(){
     await krok("słowa funkcyjne", async () => {
       D.func = new Set((await pobierzGz("dane/func.txt.gz")).split("\n"));
     });
-    for(const [p, opis] of [["n","rzeczowniki"],["a","przymiotniki"],["v","czasowniki"]]){
+    await krok("nazwy własne", async () => {
+      D.nazwy = new Set((await pobierzGz("dane/nazwy.txt.gz")).split("\n"));
+    });
+    for(const [p, opis] of [["n","rzeczowniki"],["a","przymiotniki"],["v","czasowniki"],["d","przysłówki"]]){
       await krok(opis, async () => {
         const linie = (await pobierzGz(`dane/${p}.txt.gz`)).split("\n");
         const lem = new Array(linie.length), ent = new Array(linie.length);
@@ -262,7 +273,7 @@ async function wczytaj(){
 
     postep(0.95, "budowanie indeksu…");
     await new Promise(r=>setTimeout(r,0));
-    for(const p of ["n","v","a"]){
+    for(const p of ["n","v","a","d"]){
       const m = new Map(), lem = D[p].lem;
       for(let i=0;i<lem.length;i++){
         const k = lem[i].slice(0,3);
@@ -275,7 +286,7 @@ async function wczytaj(){
 
     // zakresy skoków wynikają z długości list haseł
     const f = n => n.toLocaleString("pl-PL");
-    for(const p of ["n","v","a"]){
+    for(const p of ["n","v","a","d"]){
       const maks = D[p].lem.length - 1;
       const inp = document.getElementById("k_"+p);
       inp.min = -maks; inp.max = maks;
@@ -324,7 +335,7 @@ const cacheAnalizy = new Map();
 function analizuj(w){
   if(cacheAnalizy.has(w)) return cacheAnalizy.get(w);
   let naj = null;
-  for(const p of ["n","v","a"]){
+  for(const p of ["n","v","a","d"]){
     const widziane = new Set();
     for(const lista of [D[p].pref.get(w.slice(0,3)), D[p].irr]){
       if(!lista) continue;
@@ -340,7 +351,9 @@ function analizuj(w){
       }
     }
   }
-  if(naj && D.func.has(w) && naj.surowa < PROG_FUNKCYJNY) naj = null;
+  // Przysłówki pomijamy w tym sprawdzeniu: wszystkie ich formy trafiły do zbioru
+  // funkcyjnego, a te stopniowalne są słowami treściowymi z definicji.
+  if(naj && naj.pos !== "d" && D.func.has(w) && naj.surowa < PROG_FUNKCYJNY) naj = null;
   cacheAnalizy.set(w, naj);
   return naj;
 }
@@ -490,6 +503,13 @@ function przeksztalc(tekst, kroki){
       continue;
     }
 
+    // Nazwy własne. Usunęliśmy je z list haseł, bo słowniki ich nie notują —
+    // ale to znaczy, że maszyna widziałaby np. „Polska” wyłącznie jako formę
+    // przymiotnika „polski”. Dlatego sprawdzamy je osobno i zostawiamy w spokoju.
+    if(slowo[0] !== slowo[0].toLowerCase() && D.nazwy.has(slowo)){
+      html.push(esc(slowo)); przyimek = null; continue;
+    }
+
     const an = analizuj(mala);
     if(!an){ html.push(esc(slowo)); przyimek = null; continue; }
 
@@ -575,7 +595,8 @@ function odczytajKrok(p){
 function uruchom(){
   const tekst = document.getElementById("wejscie").value;
   if(!tekst.trim()) return;
-  const kroki = {n:odczytajKrok("n"), v:odczytajKrok("v"), a:odczytajKrok("a")};
+  const kroki = {n:odczytajKrok("n"), v:odczytajKrok("v"),
+                 a:odczytajKrok("a"), d:odczytajKrok("d")};
   const t0 = performance.now();
   const {html, rejestr} = przeksztalc(tekst, kroki);
   const ms = Math.round(performance.now()-t0);
@@ -591,7 +612,7 @@ document.getElementById("przycisk").addEventListener("click", uruchom);
 document.getElementById("wejscie").addEventListener("keydown", e=>{
   if((e.ctrlKey||e.metaKey) && e.key==="Enter") uruchom();
 });
-for(const p of ["n","v","a"])
+for(const p of ["n","v","a","d"])
   document.getElementById("k_"+p).addEventListener("input", ()=>{
     const inp = document.getElementById("k_"+p);
     inp.classList.toggle("zero", parseInt(inp.value) === 0);

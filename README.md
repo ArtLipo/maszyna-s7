@@ -4,8 +4,8 @@ Mechaniczne narzędzie do przekształcania tekstu polskiego metodą oulipijską 
 opracowaną przez Jeana Lescure'a na czwartym zebraniu grupy Oulipo, 13 lutego 1961 roku.
 
 Każdy rzeczownik zostaje zastąpiony siódmym kolejnym rzeczownikiem ze słownika.
-Ta wersja rozszerza regułę na **czasowniki i przymiotniki**, a podstawione słowo
-odmienia tak, jak odmienione było słowo pierwotne.
+Ta wersja rozszerza regułę na **czasowniki, przymiotniki i przysłówki**, a podstawione
+słowo odmienia tak, jak odmienione było słowo pierwotne.
 
 François Le Lionnais, współzałożyciel Oulipo, uogólnił metodę Lescure'a do wzoru
 **m±n**: dowolna część mowy, dowolna liczba całkowita, w przód albo wstecz.
@@ -36,13 +36,31 @@ Słowa funkcyjne — zaimki, przyimki, spójniki, partykuły — zostają nietkn
 że mają wyraźny i częsty odczyt treściowy. Dzięki temu „tak", „mi" czy „się" przechodzą
 przez maszynę bez zmian.
 
-**Nazwy własne pominięto** — słowniki języka polskiego ich nie notują, więc ich brak
-czyni maszynę wierniejszą metodzie.
+**Nazwy własne** są pominięte na listach haseł — słowniki języka polskiego ich nie
+notują, więc ich brak czyni maszynę wierniejszą metodzie. Jednocześnie są chronione
+przed zamianą: gdyby ich nie sprawdzać osobno, maszyna widziałaby „Polska" wyłącznie
+jako formę żeńską przymiotnika *polski* i podmieniałaby nazwę kraju. Rozstrzyga
+wielka litera — „Polska kultura" zostaje nietknięta, „polska kuchnia" nie.
 
 **Zaimki przymiotne** (ten, który, każdy, mój, żaden, sam…) zostają nietknięte.
 Morfologik klasyfikuje je jako przymiotniki, bo tak się odmieniają, ale to klasa
 zamknięta słów funkcyjnych i metoda nie powinna ich ruszać. Świadomie **nie**
 chronimy słów „inny" i „pewien", które bywają zwykłymi przymiotnikami.
+
+## Przysłówki
+
+Przysłówki są nieodmienne — jedyne, co robią, to stopniowanie: *szybko, szybciej,
+najszybciej*. Maszyna zachowuje stopień, także przy formach nieregularnych
+(*dobrze → lepiej → najlepiej*).
+
+Lista obejmuje **wyłącznie przysłówki stopniowalne**, czyli 1398 haseł zamiast
+25 907. Powód jest praktyczny: prawie połowa pełnej listy to formy utworzone od nazw
+miejscowych (*mielecko, mieroszowsko, dziwnowsko*), których nie da się odfiltrować po
+wielkiej literze, bo pisze się je małą. Stopniowanie okazało się skutecznym sitem —
+nazwy miejscowe się nie stopniują.
+
+Cena tego wyboru: przysłówki niestopniowalne, jak *dzisiaj* czy *wczoraj*, zostają
+nietknięte.
 
 ## Przypadek gramatyczny
 
