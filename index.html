@@ -21,11 +21,10 @@ body{background:var(--paper);color:var(--ink);font-family:var(--mono);
 .wrap{max-width:860px;margin:0 auto;padding:0 20px 120px}
 
 header{padding:44px 0 0}
-.title{font-family:var(--mono);font-weight:600;font-size:clamp(30px,7vw,52px);
-  letter-spacing:-.02em;line-height:1;margin:0}
+.title{font-weight:600;font-size:clamp(30px,7vw,52px);letter-spacing:-.02em;line-height:1;margin:0}
 .title .op{color:var(--mark)}
 .sub{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ghost);margin-top:14px}
-.attrib{font-size:12.5px;line-height:1.75;color:var(--ghost);margin-top:22px;max-width:60ch}
+.attrib{font-size:12.5px;line-height:1.75;color:var(--ghost);margin-top:22px;max-width:62ch}
 .attrib b{color:var(--ink);font-weight:500}
 
 #loader{margin:26px 0}
@@ -34,20 +33,18 @@ header{padding:44px 0 0}
 .loadtxt{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ghost);margin-top:10px}
 .loadtxt.err{color:var(--mark);text-transform:none;letter-spacing:0;font-size:13px;line-height:1.6}
 
-.panel{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-end;padding:18px 0;
-  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
-.field label{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--ghost);margin-bottom:7px}
-#krok{font-family:var(--mono);font-size:22px;font-weight:600;width:78px;background:transparent;
-  border:1px solid var(--rule);color:var(--ink);padding:4px 8px;text-align:center}
-#krok:focus{outline:2px solid var(--mark);outline-offset:1px}
-.checks{display:flex;gap:8px;flex-wrap:wrap}
-.chk{position:relative}
-.chk input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
-.chk span{display:block;padding:6px 13px;border:1px solid var(--rule);font-size:12px;
-  letter-spacing:.06em;text-transform:uppercase;color:var(--ghost);user-select:none;transition:.15s}
-.chk input:checked + span{background:var(--ink);border-color:var(--ink);color:var(--paper)}
-.chk input:focus-visible + span{outline:2px solid var(--mark);outline-offset:2px}
+/* panel kroków */
+.panel{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:20px 0}
+.panelnag{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ghost);margin-bottom:14px}
+.krok{display:grid;grid-template-columns:minmax(0,1fr) 108px minmax(0,1.1fr);
+  gap:14px;align-items:center;padding:7px 0}
+.krok label{font-size:13px;letter-spacing:.04em}
+.krok input{font-family:var(--mono);font-size:20px;font-weight:600;width:100%;
+  background:transparent;border:1px solid var(--rule);color:var(--ink);padding:5px 8px;text-align:center}
+.krok input:focus{outline:2px solid var(--mark);outline-offset:1px}
+.krok input.zero{color:var(--ghost)}
+.zakres{font-size:11.5px;color:var(--ghost);white-space:nowrap}
+.panelnota{font-size:11.5px;color:var(--ghost);margin-top:14px;line-height:1.7;max-width:62ch}
 
 .seclabel{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ghost);margin:34px 0 10px}
 textarea{width:100%;min-height:130px;resize:vertical;font-family:var(--serif);font-size:18px;
@@ -57,7 +54,7 @@ textarea:focus{outline:2px solid var(--mark);outline-offset:1px}
 button.go{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.14em;
   text-transform:uppercase;background:var(--ink);color:var(--paper);border:1px solid var(--ink);
   padding:13px 30px;cursor:pointer;transition:.15s}
-button.go:hover:not(:disabled){background:var(--mark);border-color:var(--mark)}
+button.go:hover{background:var(--mark);border-color:var(--mark)}
 button.go:focus-visible{outline:2px solid var(--mark);outline-offset:3px}
 .hint{font-size:12px;color:var(--ghost)}
 
@@ -80,6 +77,7 @@ button.copy:hover{border-color:var(--ink);color:var(--ink)}
 .wpis .zrodlo em{font-style:normal;font-size:12px;color:var(--ghost);font-weight:400}
 .wpis .kat{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ghost);
   text-align:right;white-space:nowrap}
+.wpis .kat .niepewne{color:var(--mark)}
 .sciezka{grid-column:1/-1;font-size:12.5px;color:var(--ghost);margin-top:7px;line-height:1.95}
 .sciezka .num{font-size:9.5px;color:var(--rule);margin-right:3px;vertical-align:.35em}
 .sciezka .krokw{margin-right:13px;white-space:nowrap}
@@ -106,9 +104,10 @@ footer b{color:var(--ink);font-weight:500}
   <p class="attrib">
     Metodę opracował <b>Jean Lescure</b> na czwartym zebraniu grupy Oulipo,
     13 lutego 1961 roku: każdy rzeczownik w tekście zostaje zastąpiony siódmym
-    kolejnym rzeczownikiem ze słownika. Ta maszyna rozszerza regułę na czasowniki
-    i przymiotniki, liczy w polskim porządku alfabetycznym i odmienia podstawione
-    słowo tak, jak odmienione było słowo pierwotne.
+    kolejnym rzeczownikiem ze słownika. <b>François Le Lionnais</b> uogólnił ją
+    do wzoru <b>m±n</b> — dowolna część mowy, dowolna liczba całkowita, w przód
+    albo wstecz. Ta maszyna liczy w polskim porządku alfabetycznym i odmienia
+    podstawione słowo tak, jak odmienione było słowo pierwotne.
   </p>
 </header>
 
@@ -119,17 +118,25 @@ footer b{color:var(--ink);font-weight:500}
 
 <main id="app" hidden>
   <div class="panel">
-    <div class="field">
-      <label for="krok">krok N</label>
-      <input type="number" id="krok" value="7" min="1" max="999">
+    <div class="panelnag">krok — osobno dla każdej części mowy</div>
+    <div class="krok">
+      <label for="k_n">rzeczowniki</label>
+      <input type="number" id="k_n" value="7" step="1">
+      <span class="zakres" id="z_n"></span>
     </div>
-    <div class="field">
-      <label>zamieniaj</label>
-      <div class="checks">
-        <label class="chk"><input type="checkbox" id="c_n" checked><span>rzeczowniki</span></label>
-        <label class="chk"><input type="checkbox" id="c_v" checked><span>czasowniki</span></label>
-        <label class="chk"><input type="checkbox" id="c_a" checked><span>przymiotniki</span></label>
-      </div>
+    <div class="krok">
+      <label for="k_v">czasowniki</label>
+      <input type="number" id="k_v" value="7" step="1">
+      <span class="zakres" id="z_v"></span>
+    </div>
+    <div class="krok">
+      <label for="k_a">przymiotniki</label>
+      <input type="number" id="k_a" value="7" step="1">
+      <span class="zakres" id="z_a"></span>
+    </div>
+    <div class="panelnota">
+      Zero znaczy „nie ruszaj”. Wartości ujemne liczą wstecz. Lista haseł jest
+      zapętlona: za ostatnim wyrazem następuje pierwszy.
     </div>
   </div>
 
@@ -155,6 +162,7 @@ footer b{color:var(--ink);font-weight:500}
   <a href="https://github.com/morfologik/polimorfologik">github.com/morfologik/polimorfologik</a>.
   Oceny częstości: <b>FrequencyWords</b> (OpenSubtitles 2018).
   Nazwy własne pominięto, tak jak pomijają je słowniki języka polskiego.
+  Zaimki i słowa funkcyjne zostają nietknięte.
   <span id="stat"></span>
 </footer>
 
@@ -165,7 +173,7 @@ footer b{color:var(--ink);font-weight:500}
 
 const B36 = "0123456789abcdefghijklmnopqrstuvwxyz";
 const POS_NAZWA = {n:"rzecz.", v:"czas.", a:"przym."};
-const PROG_FUNKCYJNY = 10;   // jak częste musi być słowo funkcyjne, by je zamienić
+const PROG_FUNKCYJNY = 10;
 
 const D = {
   n:{lem:[],ent:[],pref:null,irr:[],frq:""},
@@ -173,6 +181,43 @@ const D = {
   a:{lem:[],ent:[],pref:null,irr:[],frq:""},
   tag:[], func:null
 };
+
+/* ------------------------------------------------------------------
+   Zaimki przymiotne. Morfologik klasyfikuje je jako przymiotniki,
+   bo tak się odmieniają — ale to klasa zamknięta słów funkcyjnych
+   i metoda nie powinna ich ruszać.
+   ------------------------------------------------------------------ */
+const ZAIMKI = new Set([
+  "ten","tamten","ów","tenże","taki","który","jaki","czyj",
+  "jakiś","któryś","czyjś","niektóry","każdy","wszelki","wszystek",
+  "żaden","mój","twój","swój","nasz","wasz",
+  "jakikolwiek","którykolwiek","czyjkolwiek","niejaki","sam"
+]);
+
+/* ------------------------------------------------------------------
+   Przyimki o jednoznacznym rządzie. Pozwalają rozstrzygnąć przypadek
+   tam, gdzie forma wyrazu pasuje do kilku naraz.
+   Świadomie pominięte: w, na, o, po, za, nad, pod, przed, między, z —
+   rządzą różnymi przypadkami zależnie od znaczenia.
+   ------------------------------------------------------------------ */
+const PRZYIMKI = {};
+const rzad = (lista, przypadki) => { for(const w of lista) PRZYIMKI[w] = przypadki; };
+
+// przyimki jednoznaczne — rozstrzygają przypadek całkowicie
+rzad(["do","od","ode","bez","beze","dla","u","według","wedle","obok","podczas",
+      "wobec","koło","około","oprócz","prócz","zamiast","wśród","spośród","spod",
+      "spode","znad","sprzed","zza","dokoła","naokoło","wokół","wokoło","wzdłuż",
+      "wewnątrz","podług","względem","wskutek","niedaleko","mimo"], ["gen"]);
+rzad(["ku","dzięki","przeciw","przeciwko","wbrew"], ["dat"]);
+rzad(["przy"], ["loc"]);
+rzad(["przez","poprzez"], ["acc"]);
+
+// przyimki wieloznaczne — nie rozstrzygają, ale zawężają pole wyboru,
+// a to zwykle wystarcza, by odrzucić błędne odczyty
+rzad(["w","we","na","o","po"], ["loc","acc"]);
+rzad(["nad","nade","pod","pode","przed","przede","między","pomiędzy","poza"], ["acc","inst"]);
+rzad(["z","ze"], ["gen","inst"]);
+rzad(["za"], ["acc","inst","gen"]);
 
 /* ---------- wczytywanie ---------- */
 async function pobierzGz(url){
@@ -189,10 +234,7 @@ function postep(f, txt){
 async function wczytaj(){
   try{
     const N = 10; let done = 0;
-    const krok = async (opis, fn) => {
-      postep(done/N, "wczytywanie: " + opis + "…");
-      await fn(); done++;
-    };
+    const krok = async (opis, fn) => { postep(done/N, "wczytywanie: "+opis+"…"); await fn(); done++; };
 
     await krok("znaczniki gramatyczne", async () => {
       D.tag = (await pobierzGz("dane/tagsets.txt.gz")).split("\n");
@@ -200,7 +242,6 @@ async function wczytaj(){
     await krok("słowa funkcyjne", async () => {
       D.func = new Set((await pobierzGz("dane/func.txt.gz")).split("\n"));
     });
-
     for(const [p, opis] of [["n","rzeczowniki"],["a","przymiotniki"],["v","czasowniki"]]){
       await krok(opis, async () => {
         const linie = (await pobierzGz(`dane/${p}.txt.gz`)).split("\n");
@@ -212,7 +253,7 @@ async function wczytaj(){
         }
         D[p].lem = lem; D[p].ent = ent;
       });
-      await krok(opis + " — dane pomocnicze", async () => {
+      await krok(opis+" — dane pomocnicze", async () => {
         const ir = await pobierzGz(`dane/${p}.irr.gz`);
         D[p].irr = ir ? ir.split(",").map(Number) : [];
         D[p].frq = await pobierzGz(`dane/${p}.frq.gz`);
@@ -232,25 +273,31 @@ async function wczytaj(){
       D[p].pref = m;
     }
 
+    // zakresy skoków wynikają z długości list haseł
+    const f = n => n.toLocaleString("pl-PL");
+    for(const p of ["n","v","a"]){
+      const maks = D[p].lem.length - 1;
+      const inp = document.getElementById("k_"+p);
+      inp.min = -maks; inp.max = maks;
+      document.getElementById("z_"+p).textContent = "zakres ±" + f(maks);
+    }
+
     postep(1, "gotowe");
     document.getElementById("loader").hidden = true;
     document.getElementById("app").hidden = false;
-    const f = n => n.toLocaleString("pl-PL");
     document.getElementById("stat").textContent =
-      ` Wczytano ${f(D.n.lem.length)} rzeczowników, ${f(D.v.lem.length)} czasowników, ` +
-      `${f(D.a.lem.length)} przymiotników.`;
+      ` Wczytano ${f(D.n.lem.length)} rzeczowników, ${f(D.v.lem.length)} czasowników, `
+      + `${f(D.a.lem.length)} przymiotników.`;
   }catch(e){
     const t = document.getElementById("loadtxt");
     t.className = "loadtxt err";
     t.textContent = e.message === "BRAK_DECOMPRESSION"
-      ? "Ta przeglądarka nie rozpakowuje gzipa w JavaScripcie. Potrzebny Firefox 113+, "
-        + "Chrome 80+ albo Safari 16.4+."
-      : "Nie udało się wczytać słownika: " + e.message
-        + ". Sprawdź, czy katalog „dane” leży obok pliku index.html.";
+      ? "Ta przeglądarka nie rozpakowuje gzipa w JavaScripcie. Potrzebny Firefox 113+, Chrome 80+ albo Safari 16.4+."
+      : "Nie udało się wczytać słownika: " + e.message + ". Sprawdź, czy katalog „dane” leży obok pliku index.html.";
   }
 }
 
-/* ---------- analiza: słowo → lemat + znaczniki ---------- */
+/* ---------- analiza ---------- */
 function wspolnyPrefiks(a,b){
   const n = Math.min(a.length,b.length); let i=0;
   while(i<n && a[i]===b[i]) i++;
@@ -288,19 +335,17 @@ function analizuj(w){
         const tid = dopasujWLemacie(p, i, w);
         if(tid < 0) continue;
         const surowa = B36.indexOf(D[p].frq[i]);
-        // premia dla formy hasłowej — pomaga wybrać właściwy lemat spośród wieloznacznych
         const ocena = surowa + (D[p].lem[i] === w ? 8 : 0);
         if(!naj || ocena > naj.ocena) naj = {pos:p, idx:i, tid, ocena, surowa};
       }
     }
   }
-  // słowo funkcyjne (zaimek, partykuła, przyimek…) o słabym odczycie treściowym
   if(naj && D.func.has(w) && naj.surowa < PROG_FUNKCYJNY) naj = null;
   cacheAnalizy.set(w, naj);
   return naj;
 }
 
-/* ---------- synteza: lemat + wzór znaczników → forma odmieniona ---------- */
+/* ---------- cechy gramatyczne ---------- */
 const LICZBA = new Set(["sg","pl"]);
 const PRZYPADEK = new Set(["nom","gen","dat","acc","inst","loc","voc"]);
 const RODZAJ = new Set(["m1","m2","m3","f","n1","n2","p1","p2","p3"]);
@@ -309,7 +354,6 @@ const STOPIEN = new Set(["pos","com","sup"]);
 
 function cechy(wariant){
   const cz = wariant.split(":");
-  // dla czasownika typ fleksyjny stoi na drugiej pozycji (verb:praet, verb:fin…)
   const kat = (cz[0] === "verb" && cz.length > 1) ? cz[0]+":"+cz[1] : cz[0];
   const c = {kat, licz:null, przyp:null, rodz:null, osoba:null, st:null};
   for(let i=1;i<cz.length;i++){
@@ -328,13 +372,43 @@ function przecina(a,b){
   return false;
 }
 
-function odmien(p, j, tidWzor){
-  const wzor = cechy((D.tag[tidWzor] || "").split("+")[0]);
+/* ------------------------------------------------------------------
+   Wybór odczytu. Jedna forma bywa zapisana pod kilkoma znacznikami
+   naraz („normalności” to siedem różnych przypadków). Przyimek
+   stojący przed wyrazem pozwala część z nich odrzucić.
+   ------------------------------------------------------------------ */
+const WAGA_PRZYPADKU = {nom:0, acc:1, gen:2, inst:3, loc:4, dat:5, voc:6};
+
+function wybierzWariant(tid, wymagany){
+  const warianty = (D.tag[tid] || "").split("+");
+  let pasujace = warianty;
+  if(wymagany){
+    const f = warianty.filter(w => {
+      const c = cechy(w);
+      return c.przyp && c.przyp.some(x => wymagany.includes(x));
+    });
+    if(f.length) pasujace = f;
+  }
+  let naj = pasujace[0], najPkt = -1;
+  for(const w of pasujace){
+    const c = cechy(w);
+    let pkt = 0;
+    if(c.licz && c.licz.includes("sg")) pkt += 20;          // wolimy liczbę pojedynczą
+    if(c.przyp) pkt += 10 - (WAGA_PRZYPADKU[c.przyp[0]] ?? 9);
+    if(pkt > najPkt){ najPkt = pkt; naj = w; }
+  }
+  const c = cechy(naj);
+  const pewne = pasujace.length === 1 && (!c.przyp || c.przyp.length === 1);
+  return {wariant:naj, pewne};
+}
+
+/* ---------- synteza ---------- */
+function odmien(p, j, wariantWzor){
+  const wzor = cechy(wariantWzor);
   const lem = D[p].lem[j];
   const wpisy = D[p].ent[j].split(" ");
   const pola = [["licz",3,true],["przyp",3,true],["osoba",3,true],
-                ["st",2,true],["rodz",2, p !== "n"]];   // rodzaj rzeczownika tkwi w lemacie
-
+                ["st",2,true],["rodz",2, p !== "n"]];
   let scisly=null, scislyPkt=-1, luzny=null, luznyPkt=-1;
   for(const wp of wpisy){
     const a = wp.indexOf("."), b = wp.indexOf(".", a+1);
@@ -360,7 +434,7 @@ function odmien(p, j, tidWzor){
   return {forma:lem, stan:"podstawowa"};
 }
 
-/* ---------- opis gramatyczny ---------- */
+/* ---------- opis dla rejestru ---------- */
 const OPIS = {
   sg:"l.poj.", pl:"l.mn.",
   nom:"mianownik", gen:"dopełniacz", dat:"celownik", acc:"biernik",
@@ -374,10 +448,9 @@ const OPIS = {
   pcon:"imiesł. współcz.", pant:"imiesł. uprzedni",
   com:"st. wyższy", sup:"st. najwyższy"
 };
-function opiszZnaczniki(tid){
-  const cz = ((D.tag[tid]||"").split("+")[0]).split(":");
+function opiszZnaczniki(wariant){
   const out = [];
-  for(const c of cz){
+  for(const c of wariant.split(":")){
     const g = c.split(".")[0];
     if(g==="verb"||g==="subst"||g==="adj"||g==="depr") continue;
     if(OPIS[g] && !out.includes(OPIS[g])) out.push(OPIS[g]);
@@ -396,30 +469,54 @@ function zachowajWielkosc(orig, nowe){
 function esc(s){
   return s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 }
+const mod = (a,n) => ((a % n) + n) % n;
 
-function przeksztalc(tekst, N, wlaczone){
+function przeksztalc(tekst, kroki){
   const html = [], rejestr = [];
   const re = /[\p{L}]+/gu;
-  let ost = 0, m;
-  while((m = re.exec(tekst)) !== null){
-    html.push(esc(tekst.slice(ost, m.index)));
-    ost = m.index + m[0].length;
-    const slowo = m[0];
-    const an = analizuj(slowo.toLowerCase());
-    if(!an || !wlaczone[an.pos]){ html.push(esc(slowo)); continue; }
+  let ost = 0, m, przyimek = null;
 
-    const lem = D[an.pos].lem;
-    const cel = (an.idx + N) % lem.length;
-    const {forma, stan} = odmien(an.pos, cel, an.tid);
+  while((m = re.exec(tekst)) !== null){
+    const miedzy = tekst.slice(ost, m.index);
+    html.push(esc(miedzy));
+    if(/[.!?;:,()\[\]„”"»«…\n]/.test(miedzy)) przyimek = null;   // koniec frazy
+    ost = m.index + m[0].length;
+    const slowo = m[0], mala = slowo.toLowerCase();
+
+    // przyimek — zapamiętujemy rząd i idziemy dalej
+    if(Object.prototype.hasOwnProperty.call(PRZYIMKI, mala)){
+      przyimek = PRZYIMKI[mala];
+      html.push(esc(slowo));
+      continue;
+    }
+
+    const an = analizuj(mala);
+    if(!an){ html.push(esc(slowo)); przyimek = null; continue; }
+
+    // zaimki przymiotne — klasa zamknięta, metoda ich nie rusza
+    if(ZAIMKI.has(D[an.pos].lem[an.idx])){ html.push(esc(slowo)); continue; }
+
+    const {wariant, pewne} = wybierzWariant(an.tid, przyimek);
+    // rzeczownik zamyka frazę przyimkową, przymiotnik ją przekazuje dalej
+    if(an.pos !== "a") przyimek = null;
+
+    const N = kroki[an.pos] | 0;
+    if(N === 0){ html.push(esc(slowo)); continue; }
+
+    const lem = D[an.pos].lem, len = lem.length;
+    const cel = mod(an.idx + N, len);
+    const {forma, stan} = odmien(an.pos, cel, wariant);
     const koncowa = zachowajWielkosc(slowo, forma);
     html.push(`<span class="${stan==="scisle"?"zm":"przyb"}">${esc(koncowa)}</span>`);
 
-    const kroki = [];
-    for(let s=1;s<=Math.min(N,12);s++) kroki.push(lem[(an.idx+s) % lem.length]);
+    const kier = N > 0 ? 1 : -1, ile = Math.abs(N);
+    const sciezka = [];
+    for(let s=1;s<=Math.min(ile,12);s++) sciezka.push(lem[mod(an.idx + s*kier, len)]);
+
     rejestr.push({
-      zrodlo:slowo, lemat:lem[an.idx], pos:an.pos, kroki,
-      skrocone:N>12, N, cel:lem[cel], forma:koncowa,
-      gram:opiszZnaczniki(an.tid), stan
+      zrodlo:slowo, lemat:lem[an.idx], pos:an.pos, sciezka,
+      skrocone: ile > 12, N, cel:lem[cel], forma:koncowa,
+      gram:opiszZnaczniki(wariant), pewne, stan
     });
   }
   html.push(esc(tekst.slice(ost)));
@@ -435,14 +532,14 @@ const UWAGA = {
 function rysujRejestr(rej){
   const box = document.getElementById("rejestr");
   if(!rej.length){
-    box.innerHTML = '<div class="pusto">Żadne słowo nie zostało rozpoznane jako rzeczownik, '
-      + 'czasownik ani przymiotnik. Zaimki, przyimki, spójniki i partykuły metoda pomija '
-      + 'z założenia.</div>';
+    box.innerHTML = '<div class="pusto">Nic nie zostało zamienione. Albo wszystkie kroki '
+      + 'stoją na zerze, albo w tekście nie ma rozpoznanych rzeczowników, czasowników '
+      + 'ani przymiotników — zaimki, przyimki i partykuły metoda pomija z założenia.</div>';
     return;
   }
   box.innerHTML = rej.map(r=>{
-    const kroki = r.kroki.map((k,i)=>{
-      const ostatni = !r.skrocone && i === r.kroki.length-1;
+    const kroki = r.sciezka.map((k,i)=>{
+      const ostatni = !r.skrocone && i === r.sciezka.length-1;
       return `<span class="krokw"><span class="num">${i+1}</span>`
            + `<span class="${ostatni?"ost":""}">${esc(k)}</span></span>`;
     }).join("");
@@ -450,28 +547,37 @@ function rysujRejestr(rej){
       ? `<span class="krokw">… <span class="ost">${esc(r.cel)}</span> (krok ${r.N})</span>` : "";
     const lemInny = r.lemat.toLowerCase() !== r.zrodlo.toLowerCase()
       ? ` <em>← ${esc(r.lemat)}</em>` : "";
+    const znacznik = r.gram
+      ? " · " + (r.pewne ? esc(r.gram) : `<span class="niepewne">${esc(r.gram)} ?</span>`)
+      : "";
     return `<div class="wpis">
       <div class="zrodlo">${esc(r.zrodlo)}${lemInny}</div>
-      <div class="kat">${POS_NAZWA[r.pos]}${r.gram?" · "+esc(r.gram):""}</div>
+      <div class="kat">${POS_NAZWA[r.pos]}${znacznik}</div>
       <div class="sciezka">${kroki}${dalej}</div>
-      <div class="wynikwiersz"><span class="strz">→</span>
+      <div class="wynikwiersz"><span class="strz">${r.N>0?"→":"←"}</span>
         <span class="forma">${esc(r.forma)}</span>
         ${UWAGA[r.stan]?`<span class="uwaga">${UWAGA[r.stan]}</span>`:""}</div>
     </div>`;
   }).join("");
 }
 
+function odczytajKrok(p){
+  const inp = document.getElementById("k_"+p);
+  const maks = D[p].lem.length - 1;
+  let v = parseInt(inp.value);
+  if(!Number.isFinite(v)) v = 0;
+  v = Math.max(-maks, Math.min(maks, v));
+  inp.value = v;
+  inp.classList.toggle("zero", v === 0);
+  return v;
+}
+
 function uruchom(){
   const tekst = document.getElementById("wejscie").value;
   if(!tekst.trim()) return;
-  const N = Math.max(1, Math.min(999, parseInt(document.getElementById("krok").value)||7));
-  const wlaczone = {
-    n:document.getElementById("c_n").checked,
-    v:document.getElementById("c_v").checked,
-    a:document.getElementById("c_a").checked
-  };
+  const kroki = {n:odczytajKrok("n"), v:odczytajKrok("v"), a:odczytajKrok("a")};
   const t0 = performance.now();
-  const {html, rejestr} = przeksztalc(tekst, N, wlaczone);
+  const {html, rejestr} = przeksztalc(tekst, kroki);
   const ms = Math.round(performance.now()-t0);
   document.getElementById("wynik").innerHTML = html;
   document.getElementById("copyrow").hidden = false;
@@ -485,6 +591,11 @@ document.getElementById("przycisk").addEventListener("click", uruchom);
 document.getElementById("wejscie").addEventListener("keydown", e=>{
   if((e.ctrlKey||e.metaKey) && e.key==="Enter") uruchom();
 });
+for(const p of ["n","v","a"])
+  document.getElementById("k_"+p).addEventListener("input", ()=>{
+    const inp = document.getElementById("k_"+p);
+    inp.classList.toggle("zero", parseInt(inp.value) === 0);
+  });
 document.getElementById("kopiuj").addEventListener("click", async ()=>{
   try{
     await navigator.clipboard.writeText(document.getElementById("wynik").innerText);
