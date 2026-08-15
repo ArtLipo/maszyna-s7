@@ -7,6 +7,11 @@ Każdy rzeczownik zostaje zastąpiony siódmym kolejnym rzeczownikiem ze słowni
 Ta wersja rozszerza regułę na **czasowniki i przymiotniki**, a podstawione słowo
 odmienia tak, jak odmienione było słowo pierwotne.
 
+François Le Lionnais, współzałożyciel Oulipo, uogólnił metodę Lescure'a do wzoru
+**m±n**: dowolna część mowy, dowolna liczba całkowita, w przód albo wstecz.
+Maszyna idzie za tym uogólnieniem — krok ustawia się **osobno dla każdej z trzech
+części mowy**, może być ujemny, a zero znaczy „nie ruszaj".
+
 ## Jak to działa
 
 1. **Analiza** — każde słowo tekstu zostaje rozpoznane: jaką jest częścią mowy,
@@ -33,6 +38,28 @@ przez maszynę bez zmian.
 
 **Nazwy własne pominięto** — słowniki języka polskiego ich nie notują, więc ich brak
 czyni maszynę wierniejszą metodzie.
+
+**Zaimki przymiotne** (ten, który, każdy, mój, żaden, sam…) zostają nietknięte.
+Morfologik klasyfikuje je jako przymiotniki, bo tak się odmieniają, ale to klasa
+zamknięta słów funkcyjnych i metoda nie powinna ich ruszać. Świadomie **nie**
+chronimy słów „inny" i „pewien", które bywają zwykłymi przymiotnikami.
+
+## Przypadek gramatyczny
+
+Jedna polska forma pasuje często do wielu przypadków naraz. „Normalności" to
+jednocześnie dopełniacz, celownik, miejscownik i wołacz liczby pojedynczej oraz
+mianownik, biernik, dopełniacz i wołacz liczby mnogiej — osiem odczytów.
+
+Maszyna rozstrzyga to **przyimkiem stojącym przed wyrazem**. „Do" wymaga
+dopełniacza, „przy" miejscownika, „przez" biernika. Przyimki wieloznaczne
+(w, na, o, po, za, nad, pod, przed, z) nie rozstrzygają, ale zawężają pole wyboru,
+co zwykle wystarcza. Przyimek przechodzi przez przymiotniki do rzeczownika, więc
+„do wielkiej normalności" działa tak samo jak „do normalności".
+
+Gdy po zawężeniu zostaje więcej niż jeden odczyt, maszyna wybiera najbardziej
+prawdopodobny (liczba pojedyncza przed mnogą), ale **oznacza go znakiem zapytania**
+w rejestrze, zamiast udawać pewność. Bez analizy składniowej nie da się rozstrzygnąć
+wszystkiego i lepiej to pokazać, niż ukryć.
 
 ## Pliki
 
