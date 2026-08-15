@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maszyna S+7 — metoda oulipijska dla języka polskiego</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E8E9E1; --ink:#171A19; --rule:#C3C6BA;
+  --mark:#B03A21;  --ghost:#8C9086;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --serif:'IBM Plex Serif',Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--mono);
+  font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px 120px}
+
+header{padding:44px 0 0}
+.title{font-family:var(--mono);font-weight:600;font-size:clamp(30px,7vw,52px);
+  letter-spacing:-.02em;line-height:1;margin:0}
+.title .op{color:var(--mark)}
+.sub{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ghost);margin-top:14px}
+.attrib{font-size:12.5px;line-height:1.75;color:var(--ghost);margin-top:22px;max-width:60ch}
+.attrib b{color:var(--ink);font-weight:500}
+
+#loader{margin:26px 0}
+.bar{height:3px;background:var(--rule);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 100% 0 0;background:var(--mark);transition:right .25s ease}
+.loadtxt{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ghost);margin-top:10px}
+.loadtxt.err{color:var(--mark);text-transform:none;letter-spacing:0;font-size:13px;line-height:1.6}
+
+.panel{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-end;padding:18px 0;
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.field label{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ghost);margin-bottom:7px}
+#krok{font-family:var(--mono);font-size:22px;font-weight:600;width:78px;background:transparent;
+  border:1px solid var(--rule);color:var(--ink);padding:4px 8px;text-align:center}
+#krok:focus{outline:2px solid var(--mark);outline-offset:1px}
+.checks{display:flex;gap:8px;flex-wrap:wrap}
+.chk{position:relative}
+.chk input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.chk span{display:block;padding:6px 13px;border:1px solid var(--rule);font-size:12px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ghost);user-select:none;transition:.15s}
+.chk input:checked + span{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.chk input:focus-visible + span{outline:2px solid var(--mark);outline-offset:2px}
+
+.seclabel{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ghost);margin:34px 0 10px}
+textarea{width:100%;min-height:130px;resize:vertical;font-family:var(--serif);font-size:18px;
+  line-height:1.62;background:transparent;border:1px solid var(--rule);color:var(--ink);padding:16px 18px}
+textarea:focus{outline:2px solid var(--mark);outline-offset:1px}
+.actions{display:flex;gap:14px;align-items:center;margin-top:16px;flex-wrap:wrap}
+button.go{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;background:var(--ink);color:var(--paper);border:1px solid var(--ink);
+  padding:13px 30px;cursor:pointer;transition:.15s}
+button.go:hover:not(:disabled){background:var(--mark);border-color:var(--mark)}
+button.go:focus-visible{outline:2px solid var(--mark);outline-offset:3px}
+.hint{font-size:12px;color:var(--ghost)}
+
+#wynik{font-family:var(--serif);font-size:22px;line-height:1.6;min-height:60px;padding:22px 0 0}
+#wynik .zm{color:var(--mark)}
+#wynik .przyb{color:var(--mark);border-bottom:1px dotted var(--mark)}
+.copyrow{margin-top:18px}
+button.copy{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  background:transparent;border:1px solid var(--rule);color:var(--ghost);padding:8px 16px;cursor:pointer}
+button.copy:hover{border-color:var(--ink);color:var(--ink)}
+
+.rej{margin-top:14px}
+.wpis{border-top:1px solid var(--rule);padding:16px 0;display:grid;
+  grid-template-columns:1fr auto;gap:4px 18px;align-items:baseline}
+@media (prefers-reduced-motion:no-preference){
+  .wpis{animation:wjazd .3s ease both}
+  @keyframes wjazd{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+}
+.wpis .zrodlo{font-size:16px;font-weight:500}
+.wpis .zrodlo em{font-style:normal;font-size:12px;color:var(--ghost);font-weight:400}
+.wpis .kat{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ghost);
+  text-align:right;white-space:nowrap}
+.sciezka{grid-column:1/-1;font-size:12.5px;color:var(--ghost);margin-top:7px;line-height:1.95}
+.sciezka .num{font-size:9.5px;color:var(--rule);margin-right:3px;vertical-align:.35em}
+.sciezka .krokw{margin-right:13px;white-space:nowrap}
+.sciezka .ost{color:var(--mark);font-weight:600}
+.wynikwiersz{grid-column:1/-1;margin-top:9px;font-size:16px;display:flex;gap:10px;
+  align-items:baseline;flex-wrap:wrap}
+.wynikwiersz .strz{color:var(--ghost)}
+.wynikwiersz .forma{color:var(--mark);font-weight:600}
+.wynikwiersz .uwaga{font-size:11px;color:var(--ghost);letter-spacing:.04em}
+.pusto{color:var(--ghost);font-size:13px;padding:18px 0;line-height:1.7}
+
+footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--rule);
+  font-size:11.5px;line-height:1.9;color:var(--ghost)}
+footer a{color:var(--ghost)}
+footer b{color:var(--ink);font-weight:500}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1 class="title">MASZYNA S<span class="op">+</span>7</h1>
+  <div class="sub">metoda oulipijska dla języka polskiego</div>
+  <p class="attrib">
+    Metodę opracował <b>Jean Lescure</b> na czwartym zebraniu grupy Oulipo,
+    13 lutego 1961 roku: każdy rzeczownik w tekście zostaje zastąpiony siódmym
+    kolejnym rzeczownikiem ze słownika. Ta maszyna rozszerza regułę na czasowniki
+    i przymiotniki, liczy w polskim porządku alfabetycznym i odmienia podstawione
+    słowo tak, jak odmienione było słowo pierwotne.
+  </p>
+</header>
+
+<div id="loader">
+  <div class="bar"><i id="pasek"></i></div>
+  <div class="loadtxt" id="loadtxt">wczytywanie słownika…</div>
+</div>
+
+<main id="app" hidden>
+  <div class="panel">
+    <div class="field">
+      <label for="krok">krok N</label>
+      <input type="number" id="krok" value="7" min="1" max="999">
+    </div>
+    <div class="field">
+      <label>zamieniaj</label>
+      <div class="checks">
+        <label class="chk"><input type="checkbox" id="c_n" checked><span>rzeczowniki</span></label>
+        <label class="chk"><input type="checkbox" id="c_v" checked><span>czasowniki</span></label>
+        <label class="chk"><input type="checkbox" id="c_a" checked><span>przymiotniki</span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="seclabel">tekst wejściowy</div>
+  <textarea id="wejscie" spellcheck="false" placeholder="Wklej tekst do przekształcenia."></textarea>
+  <div class="actions">
+    <button class="go" id="przycisk">Przekształć</button>
+    <span class="hint" id="podpowiedz"></span>
+  </div>
+
+  <div class="seclabel">tekst wyjściowy</div>
+  <div id="wynik"></div>
+  <div class="copyrow" hidden id="copyrow"><button class="copy" id="kopiuj">Kopiuj wynik</button></div>
+
+  <div class="seclabel">rejestr przejść</div>
+  <div class="rej" id="rejestr">
+    <div class="pusto">Rejestr pokaże drogę każdego słowa przez słownik — wszystkie kroki pośrednie.</div>
+  </div>
+</main>
+
+<footer>
+  Dane słownikowe: <b>PoliMorfologik 2.1</b> (Marcin Miłkowski i in., IPI PAN / sjp.pl), licencja BSD —
+  <a href="https://github.com/morfologik/polimorfologik">github.com/morfologik/polimorfologik</a>.
+  Oceny częstości: <b>FrequencyWords</b> (OpenSubtitles 2018).
+  Nazwy własne pominięto, tak jak pomijają je słowniki języka polskiego.
+  <span id="stat"></span>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+
+const B36 = "0123456789abcdefghijklmnopqrstuvwxyz";
+const POS_NAZWA = {n:"rzecz.", v:"czas.", a:"przym."};
+const PROG_FUNKCYJNY = 10;   // jak częste musi być słowo funkcyjne, by je zamienić
+
+const D = {
+  n:{lem:[],ent:[],pref:null,irr:[],frq:""},
+  v:{lem:[],ent:[],pref:null,irr:[],frq:""},
+  a:{lem:[],ent:[],pref:null,irr:[],frq:""},
+  tag:[], func:null
+};
+
+/* ---------- wczytywanie ---------- */
+async function pobierzGz(url){
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(`nie znaleziono pliku ${url} (HTTP ${r.status})`);
+  if(typeof DecompressionStream === "undefined") throw new Error("BRAK_DECOMPRESSION");
+  return await new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).text();
+}
+function postep(f, txt){
+  document.getElementById("pasek").style.right = (100 - f*100) + "%";
+  if(txt) document.getElementById("loadtxt").textContent = txt;
+}
+
+async function wczytaj(){
+  try{
+    const N = 10; let done = 0;
+    const krok = async (opis, fn) => {
+      postep(done/N, "wczytywanie: " + opis + "…");
+      await fn(); done++;
+    };
+
+    await krok("znaczniki gramatyczne", async () => {
+      D.tag = (await pobierzGz("dane/tagsets.txt.gz")).split("\n");
+    });
+    await krok("słowa funkcyjne", async () => {
+      D.func = new Set((await pobierzGz("dane/func.txt.gz")).split("\n"));
+    });
+
+    for(const [p, opis] of [["n","rzeczowniki"],["a","przymiotniki"],["v","czasowniki"]]){
+      await krok(opis, async () => {
+        const linie = (await pobierzGz(`dane/${p}.txt.gz`)).split("\n");
+        const lem = new Array(linie.length), ent = new Array(linie.length);
+        for(let i=0;i<linie.length;i++){
+          const t = linie[i].indexOf("\t");
+          lem[i] = linie[i].slice(0,t);
+          ent[i] = linie[i].slice(t+1);
+        }
+        D[p].lem = lem; D[p].ent = ent;
+      });
+      await krok(opis + " — dane pomocnicze", async () => {
+        const ir = await pobierzGz(`dane/${p}.irr.gz`);
+        D[p].irr = ir ? ir.split(",").map(Number) : [];
+        D[p].frq = await pobierzGz(`dane/${p}.frq.gz`);
+      });
+    }
+
+    postep(0.95, "budowanie indeksu…");
+    await new Promise(r=>setTimeout(r,0));
+    for(const p of ["n","v","a"]){
+      const m = new Map(), lem = D[p].lem;
+      for(let i=0;i<lem.length;i++){
+        const k = lem[i].slice(0,3);
+        let a = m.get(k);
+        if(a === undefined){ a = []; m.set(k,a); }
+        a.push(i);
+      }
+      D[p].pref = m;
+    }
+
+    postep(1, "gotowe");
+    document.getElementById("loader").hidden = true;
+    document.getElementById("app").hidden = false;
+    const f = n => n.toLocaleString("pl-PL");
+    document.getElementById("stat").textContent =
+      ` Wczytano ${f(D.n.lem.length)} rzeczowników, ${f(D.v.lem.length)} czasowników, ` +
+      `${f(D.a.lem.length)} przymiotników.`;
+  }catch(e){
+    const t = document.getElementById("loadtxt");
+    t.className = "loadtxt err";
+    t.textContent = e.message === "BRAK_DECOMPRESSION"
+      ? "Ta przeglądarka nie rozpakowuje gzipa w JavaScripcie. Potrzebny Firefox 113+, "
+        + "Chrome 80+ albo Safari 16.4+."
+      : "Nie udało się wczytać słownika: " + e.message
+        + ". Sprawdź, czy katalog „dane” leży obok pliku index.html.";
+  }
+}
+
+/* ---------- analiza: słowo → lemat + znaczniki ---------- */
+function wspolnyPrefiks(a,b){
+  const n = Math.min(a.length,b.length); let i=0;
+  while(i<n && a[i]===b[i]) i++;
+  return i;
+}
+function dopasujWLemacie(p, i, w){
+  const lem = D[p].lem[i];
+  let k = wspolnyPrefiks(lem, w);
+  if(k > 35) k = 35;
+  const igla = "." + B36[k] + "." + w.slice(k);
+  const ent = D[p].ent[i];
+  let od = 0;
+  for(;;){
+    const j = ent.indexOf(igla, od);
+    if(j < 0) return -1;
+    const koniec = j + igla.length;
+    if(koniec === ent.length || ent[koniec] === " ")
+      return parseInt(ent.slice(ent.lastIndexOf(" ", j) + 1, j), 36);
+    od = j + 1;
+  }
+}
+
+const cacheAnalizy = new Map();
+function analizuj(w){
+  if(cacheAnalizy.has(w)) return cacheAnalizy.get(w);
+  let naj = null;
+  for(const p of ["n","v","a"]){
+    const widziane = new Set();
+    for(const lista of [D[p].pref.get(w.slice(0,3)), D[p].irr]){
+      if(!lista) continue;
+      for(let x=0;x<lista.length;x++){
+        const i = lista[x];
+        if(widziane.has(i)) continue;
+        widziane.add(i);
+        const tid = dopasujWLemacie(p, i, w);
+        if(tid < 0) continue;
+        const surowa = B36.indexOf(D[p].frq[i]);
+        // premia dla formy hasłowej — pomaga wybrać właściwy lemat spośród wieloznacznych
+        const ocena = surowa + (D[p].lem[i] === w ? 8 : 0);
+        if(!naj || ocena > naj.ocena) naj = {pos:p, idx:i, tid, ocena, surowa};
+      }
+    }
+  }
+  // słowo funkcyjne (zaimek, partykuła, przyimek…) o słabym odczycie treściowym
+  if(naj && D.func.has(w) && naj.surowa < PROG_FUNKCYJNY) naj = null;
+  cacheAnalizy.set(w, naj);
+  return naj;
+}
+
+/* ---------- synteza: lemat + wzór znaczników → forma odmieniona ---------- */
+const LICZBA = new Set(["sg","pl"]);
+const PRZYPADEK = new Set(["nom","gen","dat","acc","inst","loc","voc"]);
+const RODZAJ = new Set(["m1","m2","m3","f","n1","n2","p1","p2","p3"]);
+const OSOBA = new Set(["pri","sec","ter"]);
+const STOPIEN = new Set(["pos","com","sup"]);
+
+function cechy(wariant){
+  const cz = wariant.split(":");
+  // dla czasownika typ fleksyjny stoi na drugiej pozycji (verb:praet, verb:fin…)
+  const kat = (cz[0] === "verb" && cz.length > 1) ? cz[0]+":"+cz[1] : cz[0];
+  const c = {kat, licz:null, przyp:null, rodz:null, osoba:null, st:null};
+  for(let i=1;i<cz.length;i++){
+    const alt = cz[i].split(".");
+    if(LICZBA.has(alt[0]))         c.licz  = alt;
+    else if(PRZYPADEK.has(alt[0])) c.przyp = alt;
+    else if(RODZAJ.has(alt[0]))    c.rodz  = alt;
+    else if(OSOBA.has(alt[0]))     c.osoba = alt;
+    else if(STOPIEN.has(alt[0]))   c.st    = alt;
+  }
+  return c;
+}
+function przecina(a,b){
+  if(!a || !b) return null;
+  for(let i=0;i<a.length;i++) if(b.includes(a[i])) return true;
+  return false;
+}
+
+function odmien(p, j, tidWzor){
+  const wzor = cechy((D.tag[tidWzor] || "").split("+")[0]);
+  const lem = D[p].lem[j];
+  const wpisy = D[p].ent[j].split(" ");
+  const pola = [["licz",3,true],["przyp",3,true],["osoba",3,true],
+                ["st",2,true],["rodz",2, p !== "n"]];   // rodzaj rzeczownika tkwi w lemacie
+
+  let scisly=null, scislyPkt=-1, luzny=null, luznyPkt=-1;
+  for(const wp of wpisy){
+    const a = wp.indexOf("."), b = wp.indexOf(".", a+1);
+    if(a<0||b<0) continue;
+    const tid = parseInt(wp.slice(0,a),36);
+    const k = B36.indexOf(wp[a+1]);
+    const forma = lem.slice(0,k) + wp.slice(b+1);
+    for(const wariant of (D.tag[tid] || "").split("+")){
+      const c = cechy(wariant);
+      if(c.kat !== wzor.kat) continue;
+      let pkt = 1, ok = true;
+      for(const [pole, waga, wymagane] of pola){
+        const r = przecina(wzor[pole], c[pole]);
+        if(r === true) pkt += waga;
+        else if(r === false && wymagane) ok = false;
+      }
+      if(pkt > luznyPkt){ luznyPkt = pkt; luzny = forma; }
+      if(ok && pkt > scislyPkt){ scislyPkt = pkt; scisly = forma; }
+    }
+  }
+  if(scisly) return {forma:scisly, stan:"scisle"};
+  if(luzny)  return {forma:luzny,  stan:"przyblizone"};
+  return {forma:lem, stan:"podstawowa"};
+}
+
+/* ---------- opis gramatyczny ---------- */
+const OPIS = {
+  sg:"l.poj.", pl:"l.mn.",
+  nom:"mianownik", gen:"dopełniacz", dat:"celownik", acc:"biernik",
+  inst:"narzędnik", loc:"miejscownik", voc:"wołacz",
+  pri:"1.os.", sec:"2.os.", ter:"3.os.",
+  m1:"r.męski", m2:"r.męski", m3:"r.męski", f:"r.żeński",
+  n1:"r.nijaki", n2:"r.nijaki", p1:"r.mnogi", p2:"r.mnogi", p3:"r.mnogi",
+  fin:"czas teraźn.", praet:"czas przeszły", inf:"bezokolicznik",
+  impt:"tryb rozkaz.", imps:"forma bezosob.", pot:"tryb przyp.",
+  bedzie:"czas przyszły", pact:"imiesł. czynny", ppas:"imiesł. bierny",
+  pcon:"imiesł. współcz.", pant:"imiesł. uprzedni",
+  com:"st. wyższy", sup:"st. najwyższy"
+};
+function opiszZnaczniki(tid){
+  const cz = ((D.tag[tid]||"").split("+")[0]).split(":");
+  const out = [];
+  for(const c of cz){
+    const g = c.split(".")[0];
+    if(g==="verb"||g==="subst"||g==="adj"||g==="depr") continue;
+    if(OPIS[g] && !out.includes(OPIS[g])) out.push(OPIS[g]);
+  }
+  return out.slice(0,3).join(" · ");
+}
+
+/* ---------- przekształcenie ---------- */
+function zachowajWielkosc(orig, nowe){
+  if(orig.length>1 && orig===orig.toUpperCase() && orig!==orig.toLowerCase())
+    return nowe.toUpperCase();
+  if(orig[0]===orig[0].toUpperCase() && orig[0]!==orig[0].toLowerCase())
+    return nowe[0].toUpperCase() + nowe.slice(1);
+  return nowe;
+}
+function esc(s){
+  return s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+}
+
+function przeksztalc(tekst, N, wlaczone){
+  const html = [], rejestr = [];
+  const re = /[\p{L}]+/gu;
+  let ost = 0, m;
+  while((m = re.exec(tekst)) !== null){
+    html.push(esc(tekst.slice(ost, m.index)));
+    ost = m.index + m[0].length;
+    const slowo = m[0];
+    const an = analizuj(slowo.toLowerCase());
+    if(!an || !wlaczone[an.pos]){ html.push(esc(slowo)); continue; }
+
+    const lem = D[an.pos].lem;
+    const cel = (an.idx + N) % lem.length;
+    const {forma, stan} = odmien(an.pos, cel, an.tid);
+    const koncowa = zachowajWielkosc(slowo, forma);
+    html.push(`<span class="${stan==="scisle"?"zm":"przyb"}">${esc(koncowa)}</span>`);
+
+    const kroki = [];
+    for(let s=1;s<=Math.min(N,12);s++) kroki.push(lem[(an.idx+s) % lem.length]);
+    rejestr.push({
+      zrodlo:slowo, lemat:lem[an.idx], pos:an.pos, kroki,
+      skrocone:N>12, N, cel:lem[cel], forma:koncowa,
+      gram:opiszZnaczniki(an.tid), stan
+    });
+  }
+  html.push(esc(tekst.slice(ost)));
+  return {html:html.join(""), rejestr};
+}
+
+/* ---------- rysowanie ---------- */
+const UWAGA = {
+  scisle:"",
+  przyblizone:"odmiana przybliżona — hasło nie ma dokładnie takiej formy",
+  podstawowa:"forma podstawowa — nie udało się dopasować odmiany"
+};
+function rysujRejestr(rej){
+  const box = document.getElementById("rejestr");
+  if(!rej.length){
+    box.innerHTML = '<div class="pusto">Żadne słowo nie zostało rozpoznane jako rzeczownik, '
+      + 'czasownik ani przymiotnik. Zaimki, przyimki, spójniki i partykuły metoda pomija '
+      + 'z założenia.</div>';
+    return;
+  }
+  box.innerHTML = rej.map(r=>{
+    const kroki = r.kroki.map((k,i)=>{
+      const ostatni = !r.skrocone && i === r.kroki.length-1;
+      return `<span class="krokw"><span class="num">${i+1}</span>`
+           + `<span class="${ostatni?"ost":""}">${esc(k)}</span></span>`;
+    }).join("");
+    const dalej = r.skrocone
+      ? `<span class="krokw">… <span class="ost">${esc(r.cel)}</span> (krok ${r.N})</span>` : "";
+    const lemInny = r.lemat.toLowerCase() !== r.zrodlo.toLowerCase()
+      ? ` <em>← ${esc(r.lemat)}</em>` : "";
+    return `<div class="wpis">
+      <div class="zrodlo">${esc(r.zrodlo)}${lemInny}</div>
+      <div class="kat">${POS_NAZWA[r.pos]}${r.gram?" · "+esc(r.gram):""}</div>
+      <div class="sciezka">${kroki}${dalej}</div>
+      <div class="wynikwiersz"><span class="strz">→</span>
+        <span class="forma">${esc(r.forma)}</span>
+        ${UWAGA[r.stan]?`<span class="uwaga">${UWAGA[r.stan]}</span>`:""}</div>
+    </div>`;
+  }).join("");
+}
+
+function uruchom(){
+  const tekst = document.getElementById("wejscie").value;
+  if(!tekst.trim()) return;
+  const N = Math.max(1, Math.min(999, parseInt(document.getElementById("krok").value)||7));
+  const wlaczone = {
+    n:document.getElementById("c_n").checked,
+    v:document.getElementById("c_v").checked,
+    a:document.getElementById("c_a").checked
+  };
+  const t0 = performance.now();
+  const {html, rejestr} = przeksztalc(tekst, N, wlaczone);
+  const ms = Math.round(performance.now()-t0);
+  document.getElementById("wynik").innerHTML = html;
+  document.getElementById("copyrow").hidden = false;
+  rysujRejestr(rejestr);
+  const n = rejestr.length;
+  document.getElementById("podpowiedz").textContent =
+    `zamieniono ${n} ${n===1?"słowo":(n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"słowa":"słów")} · ${ms} ms`;
+}
+
+document.getElementById("przycisk").addEventListener("click", uruchom);
+document.getElementById("wejscie").addEventListener("keydown", e=>{
+  if((e.ctrlKey||e.metaKey) && e.key==="Enter") uruchom();
+});
+document.getElementById("kopiuj").addEventListener("click", async ()=>{
+  try{
+    await navigator.clipboard.writeText(document.getElementById("wynik").innerText);
+    const b = document.getElementById("kopiuj");
+    b.textContent = "Skopiowano";
+    setTimeout(()=>b.textContent="Kopiuj wynik", 1600);
+  }catch(_){}
+});
+
+wczytaj();
+</script>
+</body>
+</html>
