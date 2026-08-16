@@ -84,6 +84,22 @@ Pełna lista doczytuje się dopiero przy pierwszym włączeniu, żeby nie obcią
 startu. Uwaga: przy włączonym przełączniku **wszystkie skoki wypadają gdzie indziej**,
 bo zmienia się długość listy — te same ustawienia dadzą inne wyniki niż przy wyłączonym.
 
+## Zgoda przymiotnika z rzeczownikiem
+
+Rodzaj jest w polszczyźnie wpisany w hasło, więc skok potrafi przenieść rzeczownik
+z męskiego na żeński albo z pojedynczej na mnogą. Stojące obok przymiotniki i zaimki
+zostają wtedy przy dawnej formie i wychodzi „dobrego eoceńskość".
+
+Maszyna robi z tego powodu **drugi przebieg**: po zamianie wraca do określeń
+sąsiadujących z rzeczownikiem i odmienia je na nowo, według rodzaju i liczby nowego
+hasła, zachowując przypadek. Szuka w obie strony, bo polski przymiotnik bywa i przed
+rzeczownikiem („młody człowiek"), i po nim („znak osobowy"), oraz przechodzi przez
+spójniki („znak osobowy i żywy").
+
+Uzgadnianie zatrzymuje się na interpunkcji i nie przekracza granicy frazy: w „dobrego
+dzionka i smacznej kawusi" przymiotnik *smacznej* należy do *kawusi*, nie do *dzionka*.
+Wyrazy uzgodnione, ale niezamienione, są w wyniku podkreślone cienką linią.
+
 ## Przypadek gramatyczny
 
 Jedna polska forma pasuje często do wielu przypadków naraz. „Normalności" to

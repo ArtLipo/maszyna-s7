@@ -66,6 +66,7 @@ button.go:focus-visible{outline:2px solid var(--mark);outline-offset:3px}
 #wynik{font-family:var(--serif);font-size:22px;line-height:1.6;min-height:60px;padding:22px 0 0}
 #wynik .zm{color:var(--mark)}
 #wynik .przyb{color:var(--mark);border-bottom:1px dotted var(--mark)}
+#wynik .uzg{color:var(--ink);border-bottom:1px solid var(--rule)}
 .copyrow{margin-top:18px}
 button.copy{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
   background:transparent;border:1px solid var(--rule);color:var(--ghost);padding:8px 16px;cursor:pointer}
@@ -394,7 +395,10 @@ const cacheAnalizy = new Map();
 function analizuj(w){
   if(cacheAnalizy.has(w)) return cacheAnalizy.get(w);
   let naj = null;
-  for(const p of ["n","v","a","d"]){
+  // Przysłówki przed przymiotnikami: formy typu „szybko" figurują też jako
+  // przymiotnik przyprzymiotnikowy (używany wyłącznie w złożeniach), a ten
+  // odczyt jest tu prawie zawsze niewłaściwy.
+  for(const p of ["n","v","d","a"]){
     const widziane = new Set();
     for(const lista of [D[p].pref.get(w.slice(0,3)), D[p].irr]){
       if(!lista) continue;
@@ -410,9 +414,15 @@ function analizuj(w){
       }
     }
   }
-  // Przysłówki pomijamy w tym sprawdzeniu: wszystkie ich formy trafiły do zbioru
-  // funkcyjnego, a te stopniowalne są słowami treściowymi z definicji.
-  if(naj && naj.pos !== "d" && D.func.has(w) && naj.surowa < PROG_FUNKCYJNY) naj = null;
+  // Ochrona słów funkcyjnych. Dwa warunki, bo sama ocena hasła nie wystarcza:
+  // „tama" to częste słowo, ale forma „tam" jest w jego odmianie marginalna,
+  // a w tekście jest niemal zawsze przysłówkiem. Jeśli więc słowo funkcyjne
+  // pojawia się w formie, która NIE jest hasłem słownikowym swojego odczytu
+  // treściowego, traktujemy je jako funkcyjne.
+  // Przysłówki pomijamy — wszystkie ich formy są w zbiorze funkcyjnym,
+  // a te stopniowalne są słowami treściowymi z definicji.
+  if(naj && naj.pos !== "d" && D.func.has(w)
+     && (naj.surowa < PROG_FUNKCYJNY || D[naj.pos].lem[naj.idx] !== w)) naj = null;
   cacheAnalizy.set(w, naj);
   return naj;
 }
@@ -461,12 +471,16 @@ function wybierzWariant(tid, wymagany){
     });
     if(f.length) pasujace = f;
   }
+  // Przypadek rozstrzyga przed liczbą. Odwrotna kolejność dawała błędy w rodzaju
+  // „ekspertki" → forma pojedyncza, choć zdanie wymagało mnogiej: forma pasowała
+  // i do mianownika mnogiego, i do dopełniacza pojedynczego, a preferencja liczby
+  // pojedynczej zawsze wygrywała.
   let naj = pasujace[0], najPkt = -1;
   for(const w of pasujace){
     const c = cechy(w);
     let pkt = 0;
-    if(c.licz && c.licz.includes("sg")) pkt += 20;          // wolimy liczbę pojedynczą
-    if(c.przyp) pkt += 10 - (WAGA_PRZYPADKU[c.przyp[0]] ?? 9);
+    if(c.przyp) pkt += 10 * (7 - (WAGA_PRZYPADKU[c.przyp[0]] ?? 6));
+    if(c.licz && c.licz.includes("sg")) pkt += 3;           // liczba tylko rozstrzyga remisy
     if(pkt > najPkt){ najPkt = pkt; naj = w; }
   }
   const c = cechy(naj);
@@ -475,13 +489,13 @@ function wybierzWariant(tid, wymagany){
 }
 
 /* ---------- synteza ---------- */
-function odmien(p, j, wariantWzor){
-  const wzor = cechy(wariantWzor);
+function odmienWg(p, j, wzor){
   const lem = D[p].lem[j];
   const wpisy = D[p].ent[j].split(" ");
   const pola = [["licz",3,true],["przyp",3,true],["osoba",3,true],
                 ["st",2,true],["rodz",2, p !== "n"]];
-  let scisly=null, scislyPkt=-1, luzny=null, luznyPkt=-1;
+  let scisly=null, scislyPkt=-1, scislyW=null;
+  let luzny=null,  luznyPkt=-1,  luznyW=null;
   for(const wp of wpisy){
     const a = wp.indexOf("."), b = wp.indexOf(".", a+1);
     if(a<0||b<0) continue;
@@ -497,13 +511,13 @@ function odmien(p, j, wariantWzor){
         if(r === true) pkt += waga;
         else if(r === false && wymagane) ok = false;
       }
-      if(pkt > luznyPkt){ luznyPkt = pkt; luzny = forma; }
-      if(ok && pkt > scislyPkt){ scislyPkt = pkt; scisly = forma; }
+      if(pkt > luznyPkt){ luznyPkt = pkt; luzny = forma; luznyW = wariant; }
+      if(ok && pkt > scislyPkt){ scislyPkt = pkt; scisly = forma; scislyW = wariant; }
     }
   }
-  if(scisly) return {forma:scisly, stan:"scisle"};
-  if(luzny)  return {forma:luzny,  stan:"przyblizone"};
-  return {forma:lem, stan:"podstawowa"};
+  if(scisly) return {forma:scisly, stan:"scisle",      wariant:scislyW};
+  if(luzny)  return {forma:luzny,  stan:"przyblizone", wariant:luznyW};
+  return {forma:lem, stan:"podstawowa", wariant:null};
 }
 
 /* ---------- opis dla rejestru ---------- */
@@ -544,65 +558,123 @@ function esc(s){
 const mod = (a,n) => ((a % n) + n) % n;
 
 function przeksztalc(tekst, kroki, nazwyGraja){
-  const html = [], rejestr = [];
+  const tokeny = [];
   const re = /[\p{L}]+/gu;
+  const INTERPUNKCJA = /[.!?;:,()\[\]„”"»«…\n]/;
   let ost = 0, m, przyimek = null;
 
+  /* --- przebieg pierwszy: analiza i zamiana --- */
   while((m = re.exec(tekst)) !== null){
     const miedzy = tekst.slice(ost, m.index);
-    html.push(esc(miedzy));
-    if(/[.!?;:,()\[\]„”"»«…\n]/.test(miedzy)) przyimek = null;   // koniec frazy
     ost = m.index + m[0].length;
     const slowo = m[0], mala = slowo.toLowerCase();
+    const przerwa = INTERPUNKCJA.test(miedzy);
+    if(przerwa) przyimek = null;
+    const tok = {miedzy, slowo, przerwa, wynik:slowo};
 
-    // przyimek — zapamiętujemy rząd i idziemy dalej
     if(Object.prototype.hasOwnProperty.call(PRZYIMKI, mala)){
-      przyimek = PRZYIMKI[mala];
-      html.push(esc(slowo));
-      continue;
+      przyimek = PRZYIMKI[mala]; tokeny.push(tok); continue;
     }
-
-    // Nazwy własne. Usunęliśmy je z list haseł, bo słowniki ich nie notują —
-    // ale to znaczy, że maszyna widziałaby np. „Polska” wyłącznie jako formę
-    // przymiotnika „polski”. Dlatego sprawdzamy je osobno i zostawiamy w spokoju.
     if(!nazwyGraja && slowo[0] !== slowo[0].toLowerCase() && D.nazwy.has(slowo)){
-      html.push(esc(slowo)); przyimek = null; continue;
+      przyimek = null; tokeny.push(tok); continue;
     }
-
-    // Hasła nazw własnych zapisane są wielką literą, więc przy włączonym
-    // przełączniku szukamy najpierw w oryginalnej pisowni.
     let an = null;
     if(nazwyGraja && slowo[0] !== slowo[0].toLowerCase()) an = analizuj(slowo);
     if(!an) an = analizuj(mala);
-    if(!an){ html.push(esc(slowo)); przyimek = null; continue; }
+    if(!an){ przyimek = null; tokeny.push(tok); continue; }
 
-    // zaimki przymiotne — klasa zamknięta, metoda ich nie rusza
-    if(ZAIMKI.has(D[an.pos].lem[an.idx])){ html.push(esc(slowo)); continue; }
+    const wyb = wybierzWariant(an.tid, przyimek);
+    tok.an = an; tok.wariant = wyb.wariant; tok.pewne = wyb.pewne;
+    tok.celPos = an.pos; tok.celIdx = an.idx;
 
-    const {wariant, pewne} = wybierzWariant(an.tid, przyimek);
-    // rzeczownik zamyka frazę przyimkową, przymiotnik ją przekazuje dalej
+    // zaimki zostają nietknięte, ale zapisujemy ich analizę —
+    // przy uzgadnianiu trzeba je odmienić razem z rzeczownikiem („te stylizacje")
+    if(ZAIMKI.has(D[an.pos].lem[an.idx])){ tok.chronione = true; tokeny.push(tok); continue; }
     if(an.pos !== "a") przyimek = null;
 
     const N = kroki[an.pos] | 0;
-    if(N === 0){ html.push(esc(slowo)); continue; }
+    if(N !== 0){
+      const lem = D[an.pos].lem;
+      const cel = mod(an.idx + N, lem.length);
+      const r = odmienWg(an.pos, cel, cechy(tok.wariant));
+      tok.celIdx = cel; tok.N = N; tok.zmienione = true;
+      tok.stan = r.stan; tok.nowyWariant = r.wariant;
+      tok.wynik = zachowajWielkosc(slowo, r.forma);
+    }
+    tokeny.push(tok);
+  }
+  const ogon = tekst.slice(ost);
 
-    const lem = D[an.pos].lem, len = lem.length;
-    const cel = mod(an.idx + N, len);
-    const {forma, stan} = odmien(an.pos, cel, wariant);
-    const koncowa = zachowajWielkosc(slowo, forma);
-    html.push(`<span class="${stan==="scisle"?"zm":"przyb"}">${esc(koncowa)}</span>`);
+  /* --- przebieg drugi: uzgodnienie określeń z nowym rzeczownikiem ---
+     Rodzaj jest wpisany w hasło, więc skok potrafi przenieść rzeczownik
+     z męskiego na żeński. Stojące obok przymiotniki i zaimki muszą wtedy
+     zostać odmienione na nowo, inaczej wychodzi „dobrego eoceńskość".
+     Szukamy w obie strony, bo polski przymiotnik bywa i przed rzeczownikiem
+     („młody człowiek"), i po nim („znak osobowy"). */
+  const SPOJNIKI = new Set(["i","oraz","lub","albo","ani","a"]);
+  const ZASIEG = 4;
 
-    const kier = N > 0 ? 1 : -1, ile = Math.abs(N);
+  const uzgodnij = (p, nowe) => {
+    const wz = cechy(p.wariant);
+    if(nowe.rodz) wz.rodz = nowe.rodz;
+    if(nowe.licz) wz.licz = nowe.licz;
+    const r = odmienWg(p.celPos, p.celIdx, wz);
+    if(r.stan === "scisle" && r.forma !== p.wynik.toLowerCase()){
+      p.wynik = zachowajWielkosc(p.slowo, r.forma);
+      p.uzgodnione = true;
+    }
+  };
+
+  for(let i=0;i<tokeny.length;i++){
+    const t = tokeny[i];
+    if(!t.zmienione || !t.an || t.an.pos !== "n" || !t.nowyWariant) continue;
+    const stare = cechy(t.wariant), nowe = cechy(t.nowyWariant);
+    if(przecina(stare.rodz, nowe.rodz) !== false
+       && przecina(stare.licz, nowe.licz) !== false) continue;   // nic się nie zmieniło
+
+    for(const kier of [-1, 1]){
+      for(let k=1;k<=ZASIEG;k++){
+        const j = i + k*kier;
+        if(j < 0 || j >= tokeny.length) break;
+        // interpunkcja między wyrazami przerywa frazę
+        if(tokeny[kier < 0 ? j+1 : j].przerwa) break;
+        const p = tokeny[j];
+        if(p.an && p.an.pos === "a"){
+          // Przymiotnik, po którym stoi rzeczownik, należy do TAMTEGO rzeczownika,
+          // nie do naszego („dzionka i smacznej kawusi" — „smacznej" jest kawusi).
+          const nast = tokeny[j+1];
+          if(kier > 0 && nast && nast.an && nast.an.pos === "n") break;
+          uzgodnij(p, nowe); continue;
+        }
+        if(SPOJNIKI.has(p.slowo.toLowerCase())) continue;        // „znak osobowy i żywy"
+        break;
+      }
+    }
+  }
+
+  /* --- złożenie wyniku --- */
+  const html = [], rejestr = [];
+  for(const t of tokeny){
+    html.push(esc(t.miedzy));
+    if(t.zmienione || t.uzgodnione){
+      const kl = t.uzgodnione && !t.zmienione ? "uzg"
+               : (t.stan === "scisle" ? "zm" : "przyb");
+      html.push(`<span class="${kl}">${esc(t.wynik)}</span>`);
+    }else{
+      html.push(esc(t.wynik));
+    }
+    if(!t.zmienione) continue;
+    const lem = D[t.an.pos].lem, len = lem.length;
+    const kier = t.N > 0 ? 1 : -1, ile = Math.abs(t.N);
     const sciezka = [];
-    for(let s=1;s<=Math.min(ile,12);s++) sciezka.push(lem[mod(an.idx + s*kier, len)]);
-
+    for(let s=1;s<=Math.min(ile,12);s++) sciezka.push(lem[mod(t.an.idx + s*kier, len)]);
     rejestr.push({
-      zrodlo:slowo, lemat:lem[an.idx], pos:an.pos, sciezka,
-      skrocone: ile > 12, N, cel:lem[cel], forma:koncowa,
-      gram:opiszZnaczniki(wariant), pewne, stan
+      zrodlo:t.slowo, lemat:lem[t.an.idx], pos:t.an.pos, sciezka,
+      skrocone: ile > 12, N:t.N, cel:lem[t.celIdx], forma:t.wynik,
+      gram:opiszZnaczniki(t.wariant), pewne:t.pewne, stan:t.stan
     });
   }
-  html.push(esc(tekst.slice(ost)));
+  html.push(esc(ogon));
   return {html:html.join(""), rejestr};
 }
 
